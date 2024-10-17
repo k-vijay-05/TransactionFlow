@@ -1,7 +1,10 @@
 const express = require("express");
+const cors=require("cors");
 const mongoose = require("mongoose");
+const rootRoute = require("./routes/index");
 require('dotenv').config();
-const app=express()
+app.use(cors());
+
 app.use(express.json())
 const connectDb = async () => {
     try {
@@ -16,7 +19,9 @@ const connectDb = async () => {
     }
 
 };
+app.use('/api/vi',rootRoute);
+
 connectDb();
-app.listen(3001, () => {
+app.listen(3000, () => {
     console.log("server is running");
 })
