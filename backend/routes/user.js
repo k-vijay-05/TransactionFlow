@@ -3,6 +3,7 @@ const router=express.Router();
 const zod =require("zod")
 const jwt=require("jsonwebtoken")
 const {User} =require("../models/db")
+const {Account}=require("../models/db")
 const {JWT_SECRET}=require("../config")
 const { authmiddleware } =require('../middleware');
 const signupbody=zod.object({
@@ -42,6 +43,12 @@ router.post('/signup',async(req,res)=>{
         lastName:req.body.lastName,
     })
     const userId=user._id;
+
+    await Account.create({
+        userId,
+        balance: 1 + Math.random() * 10000
+    })
+
     const token =jwt.sign({
         userId,
     },JWT_SECRET);
@@ -92,14 +99,27 @@ router.put('/update',authmiddleware,async(req,res)=>{
    
 
 })
-router.get('/search',async(req,res)=>{
-    User.find({
-        $or: [
-            { firstName: req.firstName},
-            { lastName: req.lastName }
-        ],
+router.get("/bulk", async (req, res) => {
+    const filter = req.query.filter || "";
+    const users = await User.find({
+        $or: [{
+            firstName: {
+                "$regex": filter
+            }
+        }, {
+            lastName: {
+                "$regex": filter
+            }
+        }]
     })
-    
-    
+
+    res.json({
+        user: users.map(user => ({
+            username: user.username,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            _id: user._id
+        }))
+    })
 })
 module.exports=router;
